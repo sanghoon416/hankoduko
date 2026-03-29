@@ -8,7 +8,7 @@
 ## 프로젝트 개요
 - **코바늘/핸드메이드 상품 판매 이커머스 사이트**
 - 직접 만든 상품을 등록하고 판매하는 플랫폼
-- 2026-03-30 기준 **초기 세팅 + DB 스키마 + 인증 모듈 완료** (사용자 없음)
+- 2026-03-30 기준 **초기 세팅 + DB 스키마 + 인증 + 상품 CRUD 완료** (사용자 없음)
 
 ---
 
@@ -154,6 +154,26 @@ Prisma 7은 이전 버전과 다른 설정 방식을 사용:
 ### 관리자 계정
 - 시드로 생성: `npx prisma db seed`
 - 이메일: admin@hankoduko.com / 비밀번호: admin1234!
+
+---
+
+## 상품 CRUD API
+
+### API 엔드포인트
+| Method | Path | Auth | 설명 |
+|--------|------|------|------|
+| GET | `/api/products` | 공개 | 상품 목록 (?page, ?limit, ?category, ?search) |
+| GET | `/api/products/:id` | 공개 | 상품 상세 (이미지 포함) |
+| POST | `/api/products` | ADMIN | 상품 등록 |
+| PATCH | `/api/products/:id` | ADMIN | 상품 수정 |
+| DELETE | `/api/products/:id` | ADMIN | 상품 삭제 |
+| POST | `/api/products/:id/images` | ADMIN | 이미지 업로드 (multipart, 5MB, jpeg/png/webp/gif) |
+| DELETE | `/api/products/images/:imageId` | ADMIN | 이미지 삭제 |
+
+### 이미지 업로드
+- Phase 1: 로컬 `uploads/products/` 폴더에 저장
+- 파일명: UUID로 자동 생성 (충돌 방지)
+- 정적 파일 서빙: `main.ts`에서 `/uploads` prefix로 설정
 
 ---
 
