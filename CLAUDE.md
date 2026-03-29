@@ -8,7 +8,7 @@
 ## 프로젝트 개요
 - **코바늘/핸드메이드 상품 판매 이커머스 사이트**
 - 직접 만든 상품을 등록하고 판매하는 플랫폼
-- 2026-03-29 기준 **초기 세팅 완료** (사용자 없음)
+- 2026-03-30 기준 **초기 세팅 + DB 스키마 완료** (사용자 없음)
 
 ---
 
@@ -101,6 +101,40 @@ Prisma 7은 이전 버전과 다른 설정 방식을 사용:
 - PrismaClient 생성 시 **adapter 필수** (`@prisma/adapter-pg` + `pg`)
 - 설정 파일: `backend/prisma.config.ts`
 - 스키마 파일: `backend/prisma/schema.prisma`
+
+---
+
+## DB 스키마 (현재 상태)
+
+### Enums
+- **Role**: `USER` (구매자), `ADMIN` (관리자 - 상품등록/주문관리)
+- **OrderStatus**: `PENDING` → `PAID` → `SHIPPING` → `DELIVERED` / `CANCELLED`
+- **ProductCategory**: `CROCHET`, `KNITTING`, `EMBROIDERY`, `BEADS`, `OTHER`
+
+### 테이블 (5개)
+| 모델 | 테이블명 | 주요 필드 | 비고 |
+|------|----------|-----------|------|
+| User | users | email(unique), password, name, phone?, address?, role | 기본 USER |
+| Product | products | name, description?, price(Int/원), stock, category(Enum) | ADMIN만 등록 |
+| ProductImage | product_images | url, alt?, sortOrder, productId | 상품 삭제 시 Cascade |
+| Order | orders | userId, totalAmount, shipping정보, status, bankTransferInfo? | Phase 1 계좌이체 |
+| OrderItem | order_items | orderId, productId, quantity, price, productName | 주문 시점 스냅샷 |
+
+### 설계 결정
+- 모든 ID는 **UUID**
+- 가격은 **Int** (원화 소수점 없음)
+- 카테고리는 **Enum** (초기 고정, 필요 시 테이블로 전환 가능)
+- OrderItem에 **price/productName 스냅샷** (상품 수정해도 주문 이력 보존)
+- onDelete: 이미지→Cascade, 유저/상품→Restrict
+
+---
+
+## 개발 환경 주의사항
+
+- **Docker PostgreSQL 포트: 5432**
+- DB 접속 정보: `.env` 파일의 `DATABASE_URL` 참조
+- 비밀번호 변경 시 `.env`, `.env.example`, `backend/.env` 3개 파일 동시 수정 필요
+- 비밀번호 변경 후 `docker compose down -v && docker compose up -d` 로 볼륨 재생성 필요
 
 ---
 
