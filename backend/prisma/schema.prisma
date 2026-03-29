@@ -6,7 +6,7 @@ datasource db {
   provider = "postgresql"
 }
 
-// ─── Enums ──────────────��────────────────────────────────
+// ─── Enums ───────────────────────────────────────────────
 
 enum Role {
   USER
@@ -32,15 +32,17 @@ enum ProductCategory {
 // ─── Models ──────────────────────────────────────────────
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  phone     String?
-  address   String?
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password       String
+  name           String
+  address        String?
+  refundBank     String?  @map("refund_bank")
+  refundAccount  String?  @map("refund_account")
+  refreshToken   String?  @map("refresh_token")
+  role           Role     @default(USER)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   orders Order[]
 
@@ -48,14 +50,15 @@ model User {
 }
 
 model Product {
-  id          String          @id @default(uuid())
-  name        String
-  description String?
-  price       Int
-  stock       Int             @default(0)
-  category    ProductCategory
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id           String          @id @default(uuid())
+  name         String
+  thumbnailUrl String          @map("thumbnail_url")
+  description  String
+  price        Int
+  stock        Int             @default(0)
+  category     ProductCategory
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
 
   images     ProductImage[]
   orderItems OrderItem[]
@@ -68,10 +71,9 @@ model ProductImage {
   id        String   @id @default(uuid())
   url       String
   alt       String?
-  sortOrder Int      @default(0)
-  productId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  productId String   @map("product_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -80,16 +82,15 @@ model ProductImage {
 }
 
 model Order {
-  id               String      @id @default(uuid())
-  userId           String
-  totalAmount      Int
-  shippingName     String
-  shippingPhone    String
-  shippingAddress  String
-  status           OrderStatus @default(PENDING)
-  bankTransferInfo String?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  totalPrice      Int         @map("total_price")
+  shippingName    String      @map("shipping_name")
+  shippingPhone   String      @map("shipping_phone")
+  shippingAddress String      @map("shipping_address")
+  status          OrderStatus @default(PENDING)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
   user  User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   items OrderItem[]
@@ -101,13 +102,13 @@ model Order {
 
 model OrderItem {
   id          String   @id @default(uuid())
-  orderId     String
-  productId   String
+  orderId     String   @map("order_id")
+  productId   String   @map("product_id")
   quantity    Int
   price       Int
-  productName String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  productName String   @map("product_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)

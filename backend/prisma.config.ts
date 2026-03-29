@@ -14,4 +14,7 @@ export default defineConfig({
   datasource: {
     url: databaseUrl,
   },
+  migrations: {
+    seed: 'npx ts-node prisma/seed.ts',
+  },
 });
