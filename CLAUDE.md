@@ -8,7 +8,7 @@
 ## 프로젝트 개요
 - **코바늘/핸드메이드 상품 판매 이커머스 사이트**
 - 직접 만든 상품을 등록하고 판매하는 플랫폼
-- 2026-03-30 기준 **초기 세팅 + DB 스키마 + 인증 + 상품 CRUD 완료** (사용자 없음)
+- 2026-03-30 기준 **백엔드 핵심 API 완료** (인증 + 상품 + 주문)
 
 ---
 
@@ -174,6 +174,33 @@ Prisma 7은 이전 버전과 다른 설정 방식을 사용:
 - Phase 1: 로컬 `uploads/products/` 폴더에 저장
 - 파일명: UUID로 자동 생성 (충돌 방지)
 - 정적 파일 서빙: `main.ts`에서 `/uploads` prefix로 설정
+
+---
+
+## 주문 API
+
+### API 엔드포인트 (유저)
+| Method | Path | Auth | 설명 |
+|--------|------|------|------|
+| POST | `/api/orders` | USER | 주문 생성 (상품+수량, 배송정보) |
+| GET | `/api/orders` | USER | 내 주문 목록 (?page, ?limit, ?status) |
+| GET | `/api/orders/:id` | USER | 내 주문 상세 |
+
+### API 엔드포인트 (관리자)
+| Method | Path | Auth | 설명 |
+|--------|------|------|------|
+| GET | `/api/admin/orders` | ADMIN | 전체 주문 목록 |
+| GET | `/api/admin/orders/:id` | ADMIN | 주문 상세 (유저 정보 포함) |
+| PATCH | `/api/admin/orders/:id/status` | ADMIN | 주문 상태 변경 |
+
+### 상태 흐름
+- PENDING → PAID, CANCELLED
+- PAID → SHIPPING, CANCELLED
+- SHIPPING → DELIVERED, CANCELLED
+- DELIVERED, CANCELLED → 변경 불가
+
+### 주문 생성 로직
+- 상품 존재/재고 확인 → 재고 차감 → OrderItem 스냅샷 → 트랜잭션으로 처리
 
 ---
 
