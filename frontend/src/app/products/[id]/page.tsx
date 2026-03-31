@@ -1,11 +1,36 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProduct } from "@/lib/api";
 import { CATEGORY_LABELS } from "@/types";
 import type { Product } from "@/types";
 import ProductDetailClient from "./ProductDetailClient";
+import FallbackImage from "@/components/ui/FallbackImage";
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+
+  try {
+    const product = await getProduct(id);
+    const description = product.description.slice(0, 160);
+
+    return {
+      title: `${product.name} - 한코두코`,
+      description,
+      openGraph: {
+        title: `${product.name} - 한코두코`,
+        description,
+        images: product.thumbnailUrl ? [product.thumbnailUrl] : [],
+      },
+    };
+  } catch {
+    return {
+      title: "상품을 찾을 수 없습니다 - 한코두코",
+    };
+  }
 }
 
 export default async function ProductDetailPage({ params }: Props) {
@@ -27,7 +52,7 @@ export default async function ProductDetailPage({ params }: Props) {
         {/* 이미지 */}
         <div>
           <div className="aspect-square bg-secondary/30 rounded-xl overflow-hidden">
-            <img
+            <FallbackImage
               src={product.thumbnailUrl}
               alt={product.name}
               className="w-full h-full object-cover"
@@ -41,7 +66,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   key={image.id}
                   className="aspect-square bg-secondary/30 rounded-lg overflow-hidden"
                 >
-                  <img
+                  <FallbackImage
                     src={image.url}
                     alt={image.alt || product.name}
                     className="w-full h-full object-cover"

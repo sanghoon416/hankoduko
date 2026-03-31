@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { getAdminOrders } from "@/lib/api";
 import type { AdminOrder, PaginatedResponse, OrderStatus } from "@/types";
 import {
@@ -19,17 +20,13 @@ const STATUS_FILTERS: { value: string; label: string }[] = [
 ];
 
 export default function AdminOrdersPage() {
+  const searchParams = useSearchParams();
+  const initialStatus = searchParams.get("status") || "";
+
   const [data, setData] = useState<PaginatedResponse<AdminOrder> | null>(null);
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(initialStatus);
   const [loading, setLoading] = useState(true);
-
-  // URL searchParams에서 초기 status 읽기
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const s = params.get("status");
-    if (s) setStatus(s);
-  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
