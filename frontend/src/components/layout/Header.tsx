@@ -52,6 +52,18 @@ export default function Header() {
                   >
                     내 주문
                   </Link>
+                  {user.role === "ADMIN" && (
+                    <Link
+                      href="/admin"
+                      className={`text-sm font-medium transition-colors hover:text-primary-dark ${
+                        pathname.startsWith("/admin")
+                          ? "text-primary-dark"
+                          : "text-foreground/60"
+                      }`}
+                    >
+                      관리자
+                    </Link>
+                  )}
                   <span className="text-sm text-foreground/70">
                     {user.name}님
                   </span>

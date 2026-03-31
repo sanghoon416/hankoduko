@@ -3,6 +3,10 @@ import type {
   User,
   Product,
   PaginatedResponse,
+  AdminOrder,
+  OrderStatus,
+  CreateProductInput,
+  UpdateProductInput,
 } from "@/types";
 
 const API_BASE_URL =
@@ -196,4 +200,85 @@ export async function getMyOrders(params?: {
   return fetchApi<PaginatedResponse<import("@/types").Order>>(
     `/orders${qs ? `?${qs}` : ""}`
   );
+}
+
+// ─── Admin Products API ──────────────────────
+
+export async function createProduct(data: CreateProductInput) {
+  return fetchApi<Product>("/products", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateProduct(id: string, data: UpdateProductInput) {
+  return fetchApi<Product>(`/products/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteProduct(id: string) {
+  return fetchApi<void>(`/products/${id}`, { method: "DELETE" });
+}
+
+export async function uploadProductImage(
+  productId: string,
+  file: File,
+  alt?: string
+) {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (alt) formData.append("alt", alt);
+
+  const url = `${API_BASE_URL}/products/${productId}/images`;
+  const tokens = getStoredTokens();
+  const headers: Record<string, string> = {};
+  if (tokens) {
+    headers["Authorization"] = `Bearer ${tokens.accessToken}`;
+  }
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message || "이미지 업로드에 실패했습니다");
+  }
+  return res.json();
+}
+
+export async function deleteProductImage(imageId: string) {
+  return fetchApi<void>(`/products/images/${imageId}`, { method: "DELETE" });
+}
+
+// ─── Admin Orders API ────────────────────────
+
+export async function getAdminOrders(params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+}) {
+  const query = new URLSearchParams();
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.limit) query.set("limit", String(params.limit));
+  if (params?.status) query.set("status", params.status);
+
+  const qs = query.toString();
+  return fetchApi<PaginatedResponse<AdminOrder>>(
+    `/admin/orders${qs ? `?${qs}` : ""}`
+  );
+}
+
+export async function getAdminOrder(id: string) {
+  return fetchApi<AdminOrder>(`/admin/orders/${id}`);
+}
+
+export async function updateOrderStatus(id: string, status: OrderStatus) {
+  return fetchApi<AdminOrder>(`/admin/orders/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
 }

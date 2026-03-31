@@ -86,6 +86,48 @@ export interface Order {
   updatedAt: string;
 }
 
+export interface AdminOrder extends Order {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
+}
+
+export interface CreateProductInput {
+  name: string;
+  thumbnailUrl: string;
+  description: string;
+  price: number;
+  stock: number;
+  category: ProductCategory;
+}
+
+export interface UpdateProductInput {
+  name?: string;
+  thumbnailUrl?: string;
+  description?: string;
+  price?: number;
+  stock?: number;
+  category?: ProductCategory;
+}
+
+export const VALID_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["PAID", "CANCELLED"],
+  PAID: ["SHIPPING", "CANCELLED"],
+  SHIPPING: ["DELIVERED", "CANCELLED"],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
+export const STATUS_COLORS: Record<OrderStatus, string> = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  PAID: "bg-blue-100 text-blue-800",
+  SHIPPING: "bg-purple-100 text-purple-800",
+  DELIVERED: "bg-green-100 text-green-800",
+  CANCELLED: "bg-red-100 text-red-800",
+};
+
 export interface Product {
   id: string;
   name: string;

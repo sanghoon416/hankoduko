@@ -5,15 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyOrders } from "@/lib/api";
 import type { Order, PaginatedResponse } from "@/types";
-import { ORDER_STATUS_LABELS } from "@/types";
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  PAID: "bg-blue-100 text-blue-800",
-  SHIPPING: "bg-purple-100 text-purple-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-800",
-};
+import { ORDER_STATUS_LABELS, STATUS_COLORS } from "@/types";
 
 export default function OrdersPage() {
   const { user, isLoading: authLoading } = useAuth();
