@@ -8,7 +8,7 @@
 ## 프로젝트 개요
 - **코바늘/핸드메이드 상품 판매 이커머스 사이트**
 - 직접 만든 상품을 등록하고 판매하는 플랫폼
-- 2026-03-30 기준 **백엔드 핵심 API 완료** (인증 + 상품 + 주문)
+- 2026-03-30 기준 **백엔드 API 완료 + 프론트엔드 진행 중**
 
 ---
 
@@ -25,12 +25,47 @@
 
 ---
 
+## 현재 진행 상황
+
+### 완료
+- [x] 초기 세팅 + GitHub 연결 (sanghoon416/hankoduko)
+- [x] DB 스키마 설계 + 마이그레이션 (5 테이블, 3 Enum)
+- [x] DB 컬럼명 snake_case @map 적용
+- [x] 인증 모듈 (회원가입/로그인/토큰갱신/로그아웃, Access+Refresh Token)
+- [x] 상품 CRUD API + 이미지 업로드
+- [x] 주문 CRUD API (유저 주문 + 관리자 상태 관리)
+- [x] 프론트: 공통 레이아웃 (Header + Footer)
+- [x] 프론트: 홈 페이지 (히어로 + 최신 상품)
+- [x] 프론트: 상품 목록 (카테고리 필터, 페이지네이션)
+- [x] 프론트: 상품 상세 (이미지, 설명, 가격, 재고)
+- [x] 프론트: 로그인/회원가입 페이지 + AuthContext + 헤더 인증 상태
+- [x] 프론트: 상품 상세 주문 기능 (수량 선택, 주문 모달, 배송정보 입력)
+- [x] 프론트: 내 주문 내역 페이지 (/orders)
+- [x] 코드 리뷰 버그 수정 (전역 예외 필터 등록, 로그아웃 응답, not-found 중복 main 등)
+
+### 다음에 해야 할 일 (프론트엔드 UI 개선)
+- [ ] 아직 커밋/푸시 안 된 변경사항이 있을 수 있음 → git status 확인 필요
+- [ ] 검색 기능 UI (API는 이미 있음)
+- [ ] 상품 상세 SEO 메타데이터 (generateMetadata)
+- [ ] 이미지 깨짐 대응 (fallback 이미지)
+- [ ] ProductCard에 품절 표시
+- [ ] 에러 페이지 (error.tsx)
+- [ ] 관리자 페이지 (상품 등록/수정/삭제, 주문 관리)
+- [ ] URL 상태 관리 (상품 목록 카테고리/페이지 → searchParams)
+- [ ] 페이지네이션 개선 (페이지 많을 때 ... 처리)
+
+### 알려진 이슈
+- Windows 개발 환경 메모리 부족 → `npm run dev`로 프론트+백 동시 실행 시 OOM 발생 가능. 메모리 부족하면 별도 터미널에서 각각 실행 권장
+- curl로 한글 데이터 입력 시 인코딩 깨짐 → DB에서 직접 INSERT하거나 API 테스트 도구 사용
+
+---
+
 ## 프로젝트 구조
 
 ```
 hankoduko/
 ├── CLAUDE.md                   # 이 파일
-├── .env.example                # 환경 변수 템플릿
+├── .env                        # 환경 변수 (git 미추적)
 ├── package.json                # 루트 (concurrently로 동시 실행)
 ├── docker-compose.yml          # 개발용 (PostgreSQL만)
 ├── docker-compose.prod.yml     # 프로덕션 (전체 서비스)
@@ -38,16 +73,36 @@ hankoduko/
 ├── uploads/                    # Phase 1 이미지 저장소
 │
 ├── frontend/                   # Next.js 16 (App Router)
-│   ├── src/app/                # 페이지 (layout.tsx, page.tsx)
-│   ├── src/components/         # ui/, layout/
-│   ├── src/lib/api.ts          # 백엔드 API 호출 래퍼
-│   └── src/types/              # 공통 타입
+│   ├── src/app/                # 페이지
+│   │   ├── layout.tsx          # 루트 레이아웃 (AuthProvider + Header + Footer)
+│   │   ├── page.tsx            # 홈 (히어로 + 최신 상품)
+│   │   ├── login/page.tsx      # 로그인
+│   │   ├── signup/page.tsx     # 회원가입
+│   │   ├── orders/page.tsx     # 내 주문 내역
+│   │   └── products/
+│   │       ├── page.tsx        # 상품 목록 (카테고리 필터)
+│   │       └── [id]/
+│   │           ├── page.tsx    # 상품 상세 (서버 컴포넌트)
+│   │           └── ProductDetailClient.tsx  # 주문 UI (클라이언트)
+│   ├── src/components/
+│   │   ├── layout/Header.tsx   # 헤더 (네비 + 로그인/로그아웃)
+│   │   ├── layout/Footer.tsx   # 푸터
+│   │   └── ui/
+│   │       ├── ProductCard.tsx # 상품 카드
+│   │       └── OrderModal.tsx  # 주문 모달 (배송정보 입력)
+│   ├── src/contexts/AuthContext.tsx  # 인증 상태 관리 (React Context)
+│   ├── src/lib/api.ts          # API 호출 (자동 토큰 첨부 + refresh)
+│   └── src/types/index.ts      # 타입 (User, Product, Order 등)
 │
 └── backend/                    # NestJS 11
     ├── prisma/schema.prisma    # DB 스키마
-    ├── prisma.config.ts        # Prisma 7 설정 (DB URL 등)
+    ├── prisma/seed.ts          # 관리자 시드
+    ├── prisma.config.ts        # Prisma 7 설정
     └── src/
-        ├── main.ts             # 엔트리 (prefix: /api, CORS, ValidationPipe)
+        ├── main.ts             # 엔트리 (dotenv, prefix, CORS, 예외필터, 정적파일)
+        ├── auth/               # 인증 모듈 (JWT, bcrypt, guards, decorators)
+        ├── products/           # 상품 모듈 (CRUD + 이미지 업로드)
+        ├── orders/             # 주문 모듈 (유저 주문 + 관리자 상태 관리)
         ├── prisma/             # PrismaService (Global 모듈)
         └── common/filters/     # 전역 예외 필터
 ```
