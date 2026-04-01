@@ -42,6 +42,12 @@ export interface User {
   role: "USER" | "ADMIN";
 }
 
+export interface UserProfile extends User {
+  address: string | null;
+  refundBank: string | null;
+  refundAccount: string | null;
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;

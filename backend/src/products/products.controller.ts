@@ -88,6 +88,23 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 
+  @Post('upload-thumbnail')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: imageStorage,
+      fileFilter: imageFileFilter,
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  uploadThumbnail(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('이미지 파일이 필요합니다');
+    }
+    return { url: `/uploads/products/${file.filename}` };
+  }
+
   @Post(':id/images')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)

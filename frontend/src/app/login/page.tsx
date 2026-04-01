@@ -5,26 +5,32 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
+const inputBase =
+  "w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors";
+const inputNormal = `${inputBase} border-primary/20 focus:ring-primary/50`;
+const inputError = `${inputBase} border-red-400 focus:ring-red-300 bg-red-50/30`;
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setFieldErrors({});
     setLoading(true);
 
     try {
       await login(email, password);
       router.push("/");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "로그인에 실패했습니다"
-      );
+      const message =
+        err instanceof Error ? err.message : "로그인에 실패했습니다";
+      // 이메일/비밀번호 관련 에러는 비밀번호 필드에 표시
+      setFieldErrors({ password: message });
     } finally {
       setLoading(false);
     }
@@ -37,15 +43,15 @@ export default function LoginPage() {
           로그인
         </h1>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-8 shadow-sm">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg">
-              {error}
-            </div>
-          )}
-
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-xl p-8 shadow-sm"
+        >
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               이메일
             </label>
             <input
@@ -53,14 +59,20 @@ export default function LoginPage() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-primary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setFieldErrors({});
+              }}
+              className={fieldErrors.password ? inputError : inputNormal}
               placeholder="email@example.com"
             />
           </div>
 
           <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               비밀번호
             </label>
             <input
@@ -68,10 +80,17 @@ export default function LoginPage() {
               type="password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-primary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="8자 이상"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setFieldErrors({});
+              }}
+              className={fieldErrors.password ? inputError : inputNormal}
             />
+            {fieldErrors.password && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           <button
@@ -84,7 +103,10 @@ export default function LoginPage() {
 
           <p className="mt-4 text-center text-sm text-foreground/60">
             계정이 없으신가요?{" "}
-            <Link href="/signup" className="text-primary-dark hover:underline font-medium">
+            <Link
+              href="/signup"
+              className="text-primary-dark hover:underline font-medium"
+            >
               회원가입
             </Link>
           </p>

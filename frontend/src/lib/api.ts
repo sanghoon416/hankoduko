@@ -1,6 +1,7 @@
 import type {
   AuthTokens,
   User,
+  UserProfile,
   Product,
   PaginatedResponse,
   AdminOrder,
@@ -146,6 +147,60 @@ export async function authLogout(): Promise<void> {
 
 export async function authGetMe(): Promise<User> {
   return fetchApi<User>("/auth/me");
+}
+
+// ─── Profile API ──────────────────────────────
+
+export async function getProfile(): Promise<UserProfile> {
+  return fetchApi<UserProfile>("/auth/profile");
+}
+
+export async function updateProfile(data: {
+  address?: string;
+  refundBank?: string;
+  refundAccount?: string;
+}): Promise<UserProfile> {
+  return fetchApi<UserProfile>("/auth/profile", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function changePassword(data: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>("/auth/password", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+// ─── Upload API ───────────────────────────────
+
+export async function uploadThumbnail(
+  file: File
+): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const url = `${API_BASE_URL}/products/upload-thumbnail`;
+  const tokens = getStoredTokens();
+  const headers: Record<string, string> = {};
+  if (tokens) {
+    headers["Authorization"] = `Bearer ${tokens.accessToken}`;
+  }
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message || "이미지 업로드에 실패했습니다");
+  }
+  return res.json();
 }
 
 // ─── Products API ─────────────────────────────

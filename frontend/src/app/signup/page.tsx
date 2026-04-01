@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
+const inputBase =
+  "w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors";
+const inputNormal = `${inputBase} border-primary/20 focus:ring-primary/50`;
+const inputError = `${inputBase} border-red-400 focus:ring-red-300 bg-red-50/30`;
+
 export default function SignupPage() {
   const router = useRouter();
   const { signup } = useAuth();
@@ -12,20 +17,31 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setFieldErrors({});
 
+    const errors: Record<string, string> = {};
+
+    if (password.length < 4) {
+      errors.password = "비밀번호는 4자 이상이어야 합니다";
+    }
     if (password !== passwordConfirm) {
-      setError("비밀번호가 일치하지 않습니다");
-      return;
+      errors.passwordConfirm = "비밀번호가 일치하지 않습니다";
     }
 
-    if (password.length < 8) {
-      setError("비밀번호는 8자 이상이어야 합니다");
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
@@ -35,9 +51,13 @@ export default function SignupPage() {
       await signup(email, password, name);
       router.push("/");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "회원가입에 실패했습니다"
-      );
+      const message =
+        err instanceof Error ? err.message : "회원가입에 실패했습니다";
+      if (message.includes("이메일")) {
+        setFieldErrors({ email: message });
+      } else {
+        setFieldErrors({ email: message });
+      }
     } finally {
       setLoading(false);
     }
@@ -50,15 +70,15 @@ export default function SignupPage() {
           회원가입
         </h1>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-8 shadow-sm">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg">
-              {error}
-            </div>
-          )}
-
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-xl p-8 shadow-sm"
+        >
           <div className="mb-4">
-            <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               이름
             </label>
             <input
@@ -66,14 +86,23 @@ export default function SignupPage() {
               type="text"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border border-primary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              onChange={(e) => {
+                setName(e.target.value);
+                clearFieldError("name");
+              }}
+              className={fieldErrors.name ? inputError : inputNormal}
               placeholder="홍길동"
             />
+            {fieldErrors.name && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
+            )}
           </div>
 
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               이메일
             </label>
             <input
@@ -81,14 +110,23 @@ export default function SignupPage() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-primary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearFieldError("email");
+              }}
+              className={fieldErrors.email ? inputError : inputNormal}
               placeholder="email@example.com"
             />
+            {fieldErrors.email && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               비밀번호
             </label>
             <input
@@ -96,14 +134,25 @@ export default function SignupPage() {
               type="password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-primary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="8자 이상"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearFieldError("password");
+              }}
+              className={fieldErrors.password ? inputError : inputNormal}
+              placeholder="4자 이상"
             />
+            {fieldErrors.password && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           <div className="mb-6">
-            <label htmlFor="passwordConfirm" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="passwordConfirm"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               비밀번호 확인
             </label>
             <input
@@ -111,10 +160,18 @@ export default function SignupPage() {
               type="password"
               required
               value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              className="w-full px-4 py-2 border border-primary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              onChange={(e) => {
+                setPasswordConfirm(e.target.value);
+                clearFieldError("passwordConfirm");
+              }}
+              className={fieldErrors.passwordConfirm ? inputError : inputNormal}
               placeholder="비밀번호를 다시 입력"
             />
+            {fieldErrors.passwordConfirm && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.passwordConfirm}
+              </p>
+            )}
           </div>
 
           <button
@@ -127,7 +184,10 @@ export default function SignupPage() {
 
           <p className="mt-4 text-center text-sm text-foreground/60">
             이미 계정이 있으신가요?{" "}
-            <Link href="/login" className="text-primary-dark hover:underline font-medium">
+            <Link
+              href="/login"
+              className="text-primary-dark hover:underline font-medium"
+            >
               로그인
             </Link>
           </p>

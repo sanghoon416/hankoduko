@@ -10,11 +10,6 @@ export default function Header() {
   const { user, isLoading, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const links = [
-    { href: "/", label: "홈" },
-    { href: "/products", label: "상품" },
-  ];
-
   const closeMenu = () => setMenuOpen(false);
 
   return (
@@ -26,58 +21,53 @@ export default function Header() {
 
         {/* 데스크톱 메뉴 */}
         <div className="hidden md:flex items-center gap-6">
-          <ul className="flex gap-6">
-            {links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary-dark ${
-                    pathname === link.href
-                      ? "text-primary-dark"
-                      : "text-foreground/60"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-
           {!isLoading && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center">
               {user ? (
                 <>
-                  <Link
-                    href="/orders"
-                    className={`text-sm font-medium transition-colors hover:text-primary-dark ${
-                      pathname === "/orders"
-                        ? "text-primary-dark"
-                        : "text-foreground/60"
-                    }`}
-                  >
-                    내 주문
-                  </Link>
-                  {user.role === "ADMIN" && (
+                  <div className="flex items-center gap-4">
                     <Link
-                      href="/admin"
+                      href="/orders"
                       className={`text-sm font-medium transition-colors hover:text-primary-dark ${
-                        pathname.startsWith("/admin")
+                        pathname === "/orders"
                           ? "text-primary-dark"
                           : "text-foreground/60"
                       }`}
                     >
-                      관리자
+                      내 주문
                     </Link>
-                  )}
-                  <span className="text-sm text-foreground/70">
-                    {user.name}님
-                  </span>
-                  <button
-                    onClick={logout}
-                    className="text-sm text-foreground/50 hover:text-foreground transition-colors"
-                  >
-                    로그아웃
-                  </button>
+                    {user.role === "ADMIN" && (
+                      <Link
+                        href="/admin"
+                        className={`text-sm font-medium transition-colors hover:text-primary-dark ${
+                          pathname.startsWith("/admin")
+                            ? "text-primary-dark"
+                            : "text-foreground/60"
+                        }`}
+                      >
+                        관리자
+                      </Link>
+                    )}
+                  </div>
+                  <span className="mx-3 text-foreground/20">|</span>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href="/mypage"
+                      className={`text-sm font-medium transition-colors hover:text-primary-dark ${
+                        pathname === "/mypage"
+                          ? "text-primary-dark"
+                          : "text-foreground/70"
+                      }`}
+                    >
+                      {user.name}님
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="text-sm text-foreground/50 hover:text-foreground transition-colors"
+                    >
+                      로그아웃
+                    </button>
+                  </div>
                 </>
               ) : (
                 <Link
@@ -119,21 +109,6 @@ export default function Header() {
       {menuOpen && (
         <div className="md:hidden border-t border-primary/10 bg-white/95 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto px-4 py-4 space-y-3">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={closeMenu}
-                className={`block py-2 text-sm font-medium transition-colors ${
-                  pathname === link.href
-                    ? "text-primary-dark"
-                    : "text-foreground/60"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-
             {!isLoading && (
               <>
                 {user ? (
@@ -163,6 +138,17 @@ export default function Header() {
                       </Link>
                     )}
                     <hr className="border-primary/10" />
+                    <Link
+                      href="/mypage"
+                      onClick={closeMenu}
+                      className={`block py-2 text-sm font-medium transition-colors ${
+                        pathname === "/mypage"
+                          ? "text-primary-dark"
+                          : "text-foreground/60"
+                      }`}
+                    >
+                      마이페이지
+                    </Link>
                     <div className="flex items-center justify-between py-2">
                       <span className="text-sm text-foreground/70">
                         {user.name}님
