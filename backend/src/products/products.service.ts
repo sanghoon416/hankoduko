@@ -10,6 +10,10 @@ import { ProductQueryDto } from './dto/product-query.dto';
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private getUploadBase(): string {
+    return process.env.UPLOAD_DIR || path.join(process.cwd(), '..', 'uploads');
+  }
+
   async create(dto: CreateProductDto) {
     return this.prisma.product.create({
       data: dto,
@@ -74,7 +78,7 @@ export class ProductsService {
 
     // 이미지 파일 삭제
     for (const image of product.images) {
-      const filePath = path.join(process.cwd(), '..', image.url);
+      const filePath = path.join(this.getUploadBase(), image.url.replace('/uploads/', ''));
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -105,7 +109,7 @@ export class ProductsService {
     }
 
     // 파일 삭제
-    const filePath = path.join(process.cwd(), '..', image.url);
+    const filePath = path.join(this.getUploadBase(), image.url.replace('/uploads/', ''));
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }

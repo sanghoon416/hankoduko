@@ -33,8 +33,13 @@ const ALLOWED_MIME_TYPES = [
 ];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+const getUploadDir = () =>
+  process.env.UPLOAD_DIR
+    ? path.join(process.env.UPLOAD_DIR, 'products')
+    : path.join(process.cwd(), '..', 'uploads', 'products');
+
 const imageStorage = diskStorage({
-  destination: path.join(process.cwd(), '..', 'uploads', 'products'),
+  destination: (_req, _file, cb) => cb(null, getUploadDir()),
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${uuidv4()}${ext}`);

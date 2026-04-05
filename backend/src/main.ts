@@ -9,7 +9,8 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.useStaticAssets(path.join(process.cwd(), '..', 'uploads'), {
+  const uploadDir = process.env.UPLOAD_DIR || path.join(process.cwd(), '..', 'uploads');
+  app.useStaticAssets(uploadDir, {
     prefix: '/uploads',
   });
 

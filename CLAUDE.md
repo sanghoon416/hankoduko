@@ -42,21 +42,25 @@
 - [x] 프론트: 상품 상세 주문 기능 (수량 선택, 주문 모달, 배송정보 입력)
 - [x] 프론트: 내 주문 내역 페이지 (/orders)
 - [x] 코드 리뷰 버그 수정 (전역 예외 필터 등록, 로그아웃 응답, not-found 중복 main 등)
+- [x] 관리자 페이지 (대시보드 통계, 상품 등록/수정/삭제, 주문 관리/상태 변경)
+- [x] 이미지 fallback (FallbackImage 클라이언트 컴포넌트) + ProductCard 품절 오버레이
+- [x] 모바일 반응형 헤더 (햄버거 메뉴)
+- [x] 상품 목록 검색 기능 + URL 상태관리 (searchParams) + 페이지네이션 ... 처리
+- [x] 상품 상세 SEO (generateMetadata)
+- [x] 에러 페이지 (error.tsx)
+- [x] 마이페이지 (/mypage) — 프로필(주소, 환불계좌) 수정 + 비밀번호 변경
+- [x] 폼 에러 UX 개선 — 필드별 에러 표시 + 빨간 테두리 (로그인, 회원가입, 마이페이지)
+- [x] 상품 등록 이미지 업로드 (파일 선택 → 즉시 업로드 → 미리보기, X로 제거)
 
-### 다음에 해야 할 일 (프론트엔드 UI 개선)
+### 다음에 해야 할 일
 - [ ] 아직 커밋/푸시 안 된 변경사항이 있을 수 있음 → git status 확인 필요
-- [ ] 검색 기능 UI (API는 이미 있음)
-- [ ] 상품 상세 SEO 메타데이터 (generateMetadata)
-- [ ] 이미지 깨짐 대응 (fallback 이미지)
-- [ ] ProductCard에 품절 표시
-- [ ] 에러 페이지 (error.tsx)
-- [ ] 관리자 페이지 (상품 등록/수정/삭제, 주문 관리)
-- [ ] URL 상태 관리 (상품 목록 카테고리/페이지 → searchParams)
-- [ ] 페이지네이션 개선 (페이지 많을 때 ... 처리)
+- [ ] .env 파일이 Git에 추적됨 → `git rm --cached` 후 .env.example로 교체 필요
+- [ ] 배포 준비 (Nginx HTTPS, Backend Dockerfile non-root user)
 
 ### 알려진 이슈
 - Windows 개발 환경 메모리 부족 → `npm run dev`로 프론트+백 동시 실행 시 OOM 발생 가능. 메모리 부족하면 별도 터미널에서 각각 실행 권장
 - curl로 한글 데이터 입력 시 인코딩 깨짐 → DB에서 직접 INSERT하거나 API 테스트 도구 사용
+- 비밀번호 최소 길이: 4자 (백엔드 DTO + 프론트 폼 모두 4자 기준)
 
 ---
 
@@ -76,23 +80,41 @@ hankoduko/
 │   ├── src/app/                # 페이지
 │   │   ├── layout.tsx          # 루트 레이아웃 (AuthProvider + Header + Footer)
 │   │   ├── page.tsx            # 홈 (히어로 + 최신 상품)
+│   │   ├── error.tsx           # 글로벌 에러 바운더리
+│   │   ├── not-found.tsx       # 404 페이지
 │   │   ├── login/page.tsx      # 로그인
 │   │   ├── signup/page.tsx     # 회원가입
+│   │   ├── mypage/page.tsx     # 마이페이지 (프로필 수정, 비밀번호 변경)
 │   │   ├── orders/page.tsx     # 내 주문 내역
-│   │   └── products/
-│   │       ├── page.tsx        # 상품 목록 (카테고리 필터)
-│   │       └── [id]/
-│   │           ├── page.tsx    # 상품 상세 (서버 컴포넌트)
-│   │           └── ProductDetailClient.tsx  # 주문 UI (클라이언트)
+│   │   ├── products/
+│   │   │   ├── page.tsx        # 상품 목록 (Suspense wrapper)
+│   │   │   ├── ProductsContent.tsx  # 검색 + 필터 + 페이지네이션
+│   │   │   └── [id]/
+│   │   │       ├── page.tsx    # 상품 상세 (SSR + generateMetadata)
+│   │   │       └── ProductDetailClient.tsx  # 주문 UI (클라이언트)
+│   │   └── admin/
+│   │       ├── layout.tsx      # 관리자 레이아웃 (권한 체크 + 사이드바)
+│   │       ├── page.tsx        # 대시보드 (통계 카드 + 최근 주문)
+│   │       ├── products/
+│   │       │   ├── page.tsx    # 상품 목록 (테이블, 검색, 삭제)
+│   │       │   ├── new/page.tsx       # 상품 등록
+│   │       │   └── [id]/edit/page.tsx # 상품 수정 + 이미지 관리
+│   │       └── orders/
+│   │           ├── page.tsx    # 전체 주문 목록 (상태 필터)
+│   │           └── [id]/page.tsx  # 주문 상세 + 상태 변경
 │   ├── src/components/
-│   │   ├── layout/Header.tsx   # 헤더 (네비 + 로그인/로그아웃)
+│   │   ├── layout/Header.tsx   # 헤더 (반응형, 햄버거 메뉴, 관리자 링크)
 │   │   ├── layout/Footer.tsx   # 푸터
-│   │   └── ui/
-│   │       ├── ProductCard.tsx # 상품 카드
-│   │       └── OrderModal.tsx  # 주문 모달 (배송정보 입력)
+│   │   ├── ui/
+│   │   │   ├── ProductCard.tsx # 상품 카드 (fallback 이미지 + 품절 표시)
+│   │   │   ├── FallbackImage.tsx  # 이미지 에러 시 fallback 처리
+│   │   │   └── OrderModal.tsx  # 주문 모달 (배송정보 입력)
+│   │   └── admin/
+│   │       ├── AdminSidebar.tsx   # 관리자 사이드바 네비게이션
+│   │       └── ProductForm.tsx    # 상품 등록/수정 공통 폼 (이미지 업로드)
 │   ├── src/contexts/AuthContext.tsx  # 인증 상태 관리 (React Context)
-│   ├── src/lib/api.ts          # API 호출 (자동 토큰 첨부 + refresh)
-│   └── src/types/index.ts      # 타입 (User, Product, Order 등)
+│   ├── src/lib/api.ts          # API 호출 (자동 토큰 첨부 + refresh + 관리자 API)
+│   └── src/types/index.ts      # 타입 (User, Product, Order, AdminOrder 등)
 │
 └── backend/                    # NestJS 11
     ├── prisma/schema.prisma    # DB 스키마
@@ -200,6 +222,9 @@ Prisma 7은 이전 버전과 다른 설정 방식을 사용:
 | POST | `/api/auth/refresh` | Refresh Token | Access Token 재발급 |
 | POST | `/api/auth/logout` | Access Token | 로그아웃 (Refresh Token 삭제) |
 | GET | `/api/auth/me` | Access Token | 현재 유저 정보 |
+| GET | `/api/auth/profile` | Access Token | 프로필 조회 (주소, 환불계좌 포함) |
+| PATCH | `/api/auth/profile` | Access Token | 프로필 수정 (주소, 환불은행, 환불계좌) |
+| PATCH | `/api/auth/password` | Access Token | 비밀번호 변경 (현재 비밀번호 확인 필요) |
 
 ### 가드 사용법
 - `@UseGuards(JwtAuthGuard)` — 인증 필요
@@ -222,6 +247,7 @@ Prisma 7은 이전 버전과 다른 설정 방식을 사용:
 | POST | `/api/products` | ADMIN | 상품 등록 |
 | PATCH | `/api/products/:id` | ADMIN | 상품 수정 |
 | DELETE | `/api/products/:id` | ADMIN | 상품 삭제 |
+| POST | `/api/products/upload-thumbnail` | ADMIN | 썸네일 업로드 (상품 생성 전에도 사용 가능, URL 반환) |
 | POST | `/api/products/:id/images` | ADMIN | 이미지 업로드 (multipart, 5MB, jpeg/png/webp/gif) |
 | DELETE | `/api/products/images/:imageId` | ADMIN | 이미지 삭제 |
 
